@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users of the platform
+model User {
+  id                Int               @id @default(autoincrement())
+  email             String            @unique
+  password          String
+  fullName          String?
+  phoneNumber       String?
+  walletAddress     String?           @unique
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @default(now()) @map("updated_at")
+  policies          Policy[]
+  capitalProviders  CapitalProvider[]
+
+  @@map("users")
+}
+
+// Community definitions (e.g., Accra neighborhoods)
+model Community {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  description String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  riskPools   RiskPool[]
+
+  @@map("communities")
+}
+
+// Event types (rainfall shortage, power outage, flooding)
+model EventType {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  description String?
+  riskPools   RiskPool[]
+
+  @@map("event_types")
+}
+
+// Risk pools for specific events in specific communities
+model RiskPool {
+  id              Int               @id @default(autoincrement())
+  communityId     Int               @map("community_id")
+  eventTypeId     Int               @map("event_type_id")
+  totalCapital    Decimal           @default(0) @map("total_capital") @db.Decimal(20, 8)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  community       Community         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  eventType       EventType         @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  policies        Policy[]
+  capitalProviders CapitalProvider[]
+  payouts         Payout[]
+
+  @@map("risk_pools")
+}
+
+// Capital providers staking into risk pools
+model CapitalProvider {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  riskPoolId  Int       @map("risk_pool_id")
+  stakeAmount Decimal   @map("stake_amount") @db.Decimal(20, 8)
+  stakeDate   DateTime  @default(now()) @map("stake_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  riskPool    RiskPool  @relation(fields: [riskPoolId], references: [id], onDelete: Cascade)
+
+  @@map("capital_providers")
+}
+
+// Policies issued to users
+model Policy {
+  id             Int             @id @default(autoincrement())
+  userId         Int             @map("user_id")
+  riskPoolId     Int             @map("risk_pool_id")
+  coverageAmount Decimal         @map("coverage_amount") @db.Decimal(20, 8)
+  premiumAmount  Decimal         @map("premium_amount") @db.Decimal(20, 8)
+  coverageStart  DateTime        @map("coverage_start")
+  coverageEnd    DateTime        @map("coverage_end")
+  status         String
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  riskPool       RiskPool        @relation(fields: [riskPoolId], references: [id], onDelete: Cascade)
+  policyTriggers PolicyTrigger[]
+  payments       Payment[]
+  payouts        Payout[]
+
+  @@map("policies")
+}
+
+// Oracle sources for off-chain data feeds
+model OracleSource {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  sourceType String?      @map("source_type")
+  endpoint   String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  oracleData OracleData[]
+
+  @@map("oracle_sources")
+}
+
+// Oracle data records
+model OracleData {
+  id              Int             @id @default(autoincrement())
+  oracleSourceId  Int             @map("oracle_source_id")
+  timestamp       DateTime
+  data            Json
+  createdAt       DateTime        @default(now()) @map("created_at")
+  oracleSource    OracleSource    @relation(fields: [oracleSourceId], references: [id], onDelete: Cascade)
+  policyTriggers  PolicyTrigger[]
+
+  @@map("oracle_data")
+}
+
+// Policy trigger checks
+model PolicyTrigger {
+  id               Int         @id @default(autoincrement())
+  policyId         Int         @map("policy_id")
+  oracleDataId     Int         @map("oracle_data_id")
+  triggered        Boolean     @default(false)
+  triggerCheckedAt DateTime    @default(now()) @map("trigger_checked_at")
+  payoutId         Int?        @map("payout_id")
+  policy           Policy      @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  oracleData       OracleData  @relation(fields: [oracleDataId], references: [id], onDelete: Cascade)
+  payout           Payout?     @relation(fields: [payoutId], references: [id])
+
+  @@map("policy_triggers")
+}
+
+// Premium payments by policyholders
+model Payment {
+  id            Int      @id @default(autoincrement())
+  policyId      Int      @map("policy_id")
+  amount        Decimal  @db.Decimal(20, 8)
+  paymentTxHash String?  @unique @map("payment_tx_hash")
+  paidAt        DateTime @default(now()) @map("paid_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  policy        Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Payouts to policyholders when triggers occur
+model Payout {
+  id             Int             @id @default(autoincrement())
+  policyId       Int?            @map("policy_id")
+  riskPoolId     Int?            @map("risk_pool_id")
+  payoutAmount   Decimal         @map("payout_amount") @db.Decimal(20, 8)
+  payoutTxHash   String?         @map("payout_tx_hash")
+  paidAt         DateTime?       @map("paid_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  policy         Policy?         @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  riskPool       RiskPool?       @relation(fields: [riskPoolId], references: [id], onDelete: SetNull)
+  policyTriggers PolicyTrigger[]
+
+  @@map("payouts")
+}
