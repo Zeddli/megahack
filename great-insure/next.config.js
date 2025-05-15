@@ -10,14 +10,14 @@ const nextConfig = {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        os: false,
-        crypto: false,
-        stream: false,
-        http: false,
-        https: false,
-        zlib: false
+        fs: true,
+        path: true,
+        os: true,
+        crypto: true,
+        stream: true,
+        http: true,
+        https: true,
+        zlib: true
       };
     }
     return config;
