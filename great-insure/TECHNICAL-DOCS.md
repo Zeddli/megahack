@@ -597,4 +597,432 @@ The roadmap for weather data integration includes:
 3. **Parametric Contract Expansion**:
    - Additional weather parameters (wind, humidity, solar radiation)
    - Crop-specific weather impact models
+<<<<<<< Updated upstream
    - Multi-parameter trigger conditions 
+=======
+   - Multi-parameter trigger conditions 
+
+## Smart Contract Implementation
+
+The Great Insure platform is powered by a Solana program written in Rust using the Anchor framework. The smart contract implements the core business logic for agricultural insurance, risk pooling, and automated claim processing.
+
+### Contract Overview
+
+```
++--------------------+       +--------------------+       +--------------------+
+|                    |       |                    |       |                    |
+| User Accounts      |<----->| Risk Pool System   |<----->| Policy Management  |
+|                    |       |                    |       |                    |
++--------------------+       +--------------------+       +--------------------+
+          ^                           ^                            ^
+          |                           |                            |
+          v                           v                            v
++--------------------+       +--------------------+       +--------------------+
+|                    |       |                    |       |                    |
+| Capital Management |<----->| Oracle Integration |<----->| Claim Processing   |
+|                    |       |                    |       |                    |
++--------------------+       +--------------------+       +--------------------+
+```
+
+### Program Architecture
+
+The smart contract is organized into several key components:
+
+1. **User Account Management**: Registration and identity verification
+2. **Risk Pool System**: Creation and management of capital pools
+3. **Policy Management**: Issuance, maintenance, and expiration of policies
+4. **Capital Management**: Staking, withdrawal, and allocation mechanisms
+5. **Oracle Integration**: External data integration and validation
+6. **Claim Processing**: Automated verification and payout processing
+
+### Key Data Structures
+
+#### User Account
+
+```rust
+#[account]
+pub struct User {
+    pub authority: Pubkey,   // User's wallet address
+    pub name: String,        // User's name or identifier
+    pub created_at: i64,     // Account creation timestamp
+}
+```
+
+#### Risk Pool
+
+```rust
+#[account]
+pub struct RiskPool {
+    pub authority: Pubkey,              // Pool administrator
+    pub name: String,                   // Pool name
+    pub risk_type: RiskType,            // Type of risk covered
+    pub total_funds: u64,               // Total capital in pool
+    pub allocated_funds: u64,           // Funds reserved for active policies
+    pub min_capital_requirement: u64,   // Minimum capital required
+    pub active: bool,                   // Pool active status
+    pub created_at: i64,                // Creation timestamp
+}
+```
+
+#### Insurance Policy
+
+```rust
+#[account]
+pub struct Policy {
+    pub owner: Pubkey,               // Policy owner
+    pub risk_pool: Pubkey,           // Associated risk pool
+    pub coverage_amount: u64,        // Maximum payout amount
+    pub premium: u64,                // Premium paid
+    pub start_time: i64,             // Policy start timestamp
+    pub duration: i64,               // Policy duration in seconds
+    pub end_time: i64,               // Policy expiration timestamp
+    pub status: PolicyStatus,        // Current status
+    pub location_lat: f64,           // Location latitude
+    pub location_lon: f64,           // Location longitude
+    pub trigger_type: TriggerType,   // Event type that triggers claim
+    pub trigger_threshold: u64,      // Threshold value for triggering
+    pub claim_time: Option<i64>,     // Timestamp of claim (if claimed)
+    pub created_at: i64,             // Creation timestamp
+}
+```
+
+#### Oracle Data
+
+```rust
+#[account]
+pub struct OracleData {
+    pub oracle: Pubkey,           // Oracle provider's public key
+    pub oracle_type: OracleType,  // Type of data provided
+    pub data_value: u64,          // Actual measurement value
+    pub reported_at: i64,         // Timestamp of measurement
+    pub location_lat: f64,        // Measurement location latitude
+    pub location_lon: f64,        // Measurement location longitude
+    pub recorded_at: i64,         // Blockchain recording timestamp
+}
+```
+
+#### Capital Provider
+
+```rust
+#[account]
+pub struct CapitalProvider {
+    pub authority: Pubkey,     // Provider's wallet address
+    pub risk_pool: Pubkey,     // Associated risk pool
+    pub stake_amount: u64,     // Amount of capital provided
+    pub added_at: i64,         // Initial stake timestamp
+    pub last_update: i64,      // Last stake update timestamp
+}
+```
+
+### Core Instructions
+
+#### User Registration
+
+```rust
+/// Create a new user account for participating in the insurance platform
+pub fn register_user(ctx: Context<RegisterUser>, name: String) -> Result<()> {
+    let user = &mut ctx.accounts.user;
+    user.authority = *ctx.accounts.authority.key;
+    user.name = name.clone();
+    user.created_at = Clock::get()?.unix_timestamp;
+    
+    msg!("User account created for: {}", name);
+    Ok(())
+}
+```
+
+#### Risk Pool Creation
+
+```rust
+/// Initialize a risk pool for a specific type of insurance coverage
+pub fn initialize_risk_pool(
+    ctx: Context<InitializeRiskPool>, 
+    pool_name: String,
+    risk_type: RiskType,
+    min_capital_requirement: u64
+) -> Result<()> {
+    let pool = &mut ctx.accounts.risk_pool;
+    pool.authority = ctx.accounts.authority.key();
+    pool.name = pool_name.clone();
+    pool.risk_type = risk_type;
+    pool.total_funds = 0;
+    pool.allocated_funds = 0;
+    pool.min_capital_requirement = min_capital_requirement;
+    pool.active = true;
+    pool.created_at = Clock::get()?.unix_timestamp;
+    
+    msg!("Risk pool initialized: {}", pool_name);
+    Ok(())
+}
+```
+
+#### Capital Contribution
+
+```rust
+/// Add capital to a risk pool as a capital provider
+pub fn add_capital(ctx: Context<AddCapital>, amount: u64) -> Result<()> {
+    // Ensure risk pool is active
+    require!(ctx.accounts.risk_pool.active, CustomError::RiskPoolInactive);
+    
+    // Transfer funds from provider to pool vault
+    let transfer_ix = system_instruction::transfer(
+        &ctx.accounts.authority.key(),
+        &ctx.accounts.risk_pool_vault.key(),
+        amount,
+    );
+
+    invoke(
+        &transfer_ix,
+        &[
+            ctx.accounts.authority.to_account_info(),
+            ctx.accounts.risk_pool_vault.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        ],
+    )?;
+
+    // Update capital provider and risk pool state
+    // ...implementation details...
+    
+    Ok(())
+}
+```
+
+#### Policy Purchase
+
+```rust
+/// Purchase a new insurance policy
+pub fn purchase_policy(
+    ctx: Context<PurchasePolicy>,
+    coverage_amount: u64,
+    premium: u64,
+    duration: i64,
+    location_lat: f64,
+    location_lon: f64,
+    trigger_type: TriggerType,
+    trigger_threshold: u64,
+) -> Result<()> {
+    // Validate risk pool state, premium amount, and available funds
+    // ...validation logic...
+    
+    // Initialize policy with provided parameters
+    let policy = &mut ctx.accounts.policy;
+    let clock = Clock::get()?;
+    policy.owner = *ctx.accounts.user.to_account_info().key;
+    policy.risk_pool = ctx.accounts.risk_pool.key();
+    policy.coverage_amount = coverage_amount;
+    policy.premium = premium;
+    policy.start_time = clock.unix_timestamp;
+    policy.duration = duration;
+    policy.end_time = clock.unix_timestamp.checked_add(duration).ok_or(CustomError::MathOverflow)?;
+    policy.status = PolicyStatus::Active;
+    
+    // Set trigger parameters
+    policy.location_lat = location_lat;
+    policy.location_lon = location_lon;
+    policy.trigger_type = trigger_type;
+    policy.trigger_threshold = trigger_threshold;
+    policy.created_at = clock.unix_timestamp;
+
+    // Process premium payment and update risk pool
+    // ...payment processing...
+    
+    Ok(())
+}
+```
+
+#### Oracle Data Recording
+
+```rust
+/// Record oracle data (weather, power outage, etc.) from authorized oracle providers
+pub fn record_oracle_data(
+    ctx: Context<RecordOracleData>,
+    oracle_type: OracleType,
+    data_value: u64,
+    timestamp: i64,
+    location_lat: f64,
+    location_lon: f64,
+) -> Result<()> {
+    let oracle_data = &mut ctx.accounts.oracle_data;
+    
+    // Initialize oracle data account
+    oracle_data.oracle = ctx.accounts.oracle_authority.key();
+    oracle_data.oracle_type = oracle_type;
+    oracle_data.data_value = data_value;
+    oracle_data.reported_at = timestamp;
+    oracle_data.location_lat = location_lat;
+    oracle_data.location_lon = location_lon;
+    oracle_data.recorded_at = Clock::get()?.unix_timestamp;
+    
+    msg!("Oracle data recorded: type={:?}, value={}", oracle_type, data_value);
+    Ok(())
+}
+```
+
+#### Claim Processing
+
+```rust
+/// Allow policy holder to claim payout when eligible
+pub fn claim_policy(ctx: Context<ClaimPolicy>) -> Result<()> {
+    let policy = &mut ctx.accounts.policy;
+    let risk_pool = &mut ctx.accounts.risk_pool;
+    let oracle_data = &ctx.accounts.oracle_data;
+    
+    // Verify policy status and eligibility
+    require!(policy.status == PolicyStatus::Active, CustomError::PolicyInactive);
+    
+    // Check if oracle data satisfies policy trigger conditions
+    let eligible = oracle_data_satisfies_trigger(oracle_data, policy)?;
+    require!(eligible, CustomError::TriggerConditionsNotMet);
+    
+    // Process the claim payout
+    let payout_amount = policy.coverage_amount;
+    
+    // Transfer funds from pool to claimant
+    // ...transfer implementation...
+    
+    // Update policy and risk pool state
+    policy.status = PolicyStatus::Claimed;
+    policy.claim_time = Some(Clock::get()?.unix_timestamp);
+    
+    risk_pool.allocated_funds = risk_pool.allocated_funds
+        .checked_sub(policy.coverage_amount)
+        .ok_or(CustomError::MathOverflow)?;
+    
+    msg!("Policy claimed with payout: {}", payout_amount);
+    Ok(())
+}
+```
+
+### Weather Data and Policy Triggers
+
+The core innovation of Great Insure is connecting real-world weather data to on-chain policy contracts. This is implemented through:
+
+#### Weather Event Types
+
+```rust
+pub enum TriggerType {
+    RainfallShortage,    // Drought conditions
+    Flood,               // Excessive rainfall
+    PowerOutage,         // Loss of electricity
+    ExtremeTemperature,  // Heat or cold waves
+}
+```
+
+#### Oracle Data Types
+
+```rust
+pub enum OracleType {
+    Rainfall,       // Precipitation measurements
+    Temperature,    // Temperature readings
+    PowerGrid,      // Power grid status
+    WaterLevel,     // Flood/water level data
+}
+```
+
+#### Trigger Validation Logic
+
+```rust
+fn oracle_data_satisfies_trigger(
+    oracle_data: &Account<OracleData>, 
+    policy: &Account<Policy>
+) -> Result<bool> {
+    // First check if oracle data is relevant to this policy
+    if !oracle_types_match(oracle_data.oracle_type, policy.trigger_type) {
+        return Ok(false);
+    }
+    
+    // Check if the oracle data location is within acceptable range of policy location
+    let distance = calculate_distance(
+        oracle_data.location_lat, 
+        oracle_data.location_lon,
+        policy.location_lat,
+        policy.location_lon
+    );
+    
+    // Maximum distance for data relevance (approximately 50 km)
+    let max_distance = 0.5;
+    if distance > max_distance {
+        return Ok(false);
+    }
+    
+    // Check if the data value meets the trigger threshold
+    let meets_threshold = match policy.trigger_type {
+        TriggerType::RainfallShortage => {
+            // For rainfall shortage, the recorded value should be BELOW threshold
+            oracle_data.data_value <= policy.trigger_threshold
+        },
+        TriggerType::Flood => {
+            // For floods, the recorded value should be ABOVE threshold
+            oracle_data.data_value >= policy.trigger_threshold
+        },
+        TriggerType::ExtremeTemperature => {
+            // For extreme temperature, the recorded value should be ABOVE threshold
+            oracle_data.data_value >= policy.trigger_threshold
+        },
+        TriggerType::PowerOutage => {
+            // For power outage, the recorded value indicates outage duration in minutes
+            oracle_data.data_value >= policy.trigger_threshold
+        },
+    };
+    
+    Ok(meets_threshold)
+}
+```
+
+### Security Considerations
+
+The contract implements several security measures:
+
+1. **Access Controls**: Each function validates the caller's authority
+2. **Oracle Data Verification**: Mechanisms to ensure data integrity
+3. **Funds Protection**: Segregation of funds in risk pools
+4. **Mathematical Safety**: Checked math to prevent overflows
+5. **Error Handling**: Comprehensive error types and messaging
+
+#### Custom Error Types
+
+```rust
+pub enum CustomError {
+    #[msg("Policy is already inactive or claimed")]
+    PolicyInactive,
+    
+    #[msg("Unauthorized: You are not the owner of this policy")]
+    UnauthorizedClaim,
+    
+    #[msg("Insufficient funds in risk pool for coverage")]
+    InsufficientPoolFunds,
+    
+    // ... other errors ...
+    
+    #[msg("Unauthorized access to account")]
+    UnauthorizedAccess,
+}
+```
+
+### Deployment and Upgrade Strategy
+
+The smart contract follows a controlled deployment process:
+
+1. **Testnet Validation**: Initial testing on Solana devnet
+2. **Security Audits**: Third-party security reviews
+3. **Program Upgrades**: Upgradeable design for future improvements
+4. **Governance Control**: Multi-signature authority for critical operations
+
+### Integration Points
+
+The smart contract integrates with other components through:
+
+1. **Oracle Feeds**: External data providers submit weather measurements
+2. **Frontend Applications**: User interaction through Great Insure web app
+3. **Data Analytics**: Reporting and risk assessment tools
+4. **Identity Systems**: Optional integration with DID solutions
+
+### Performance Optimizations
+
+The contract implements several optimizations:
+
+1. **Account Structure**: Optimized for minimal storage usage
+2. **Computational Efficiency**: Lightweight algorithms for claim validation
+3. **Batched Operations**: Where possible, operations are batched for efficiency
+4. **Caching Strategy**: Strategic use of PDAs for efficient data lookups 
+>>>>>>> Stashed changes
