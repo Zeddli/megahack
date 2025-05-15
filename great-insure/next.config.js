@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Disable Turbopack due to compatibility issues
   experimental: {
-    turbo: {}  // Explicitly disable Turbopack
+    turbo: true  // Explicitly disable Turbopack
   },
   webpack: (config, { isServer }) => {
     // Fix for possible wallet adapter issues
