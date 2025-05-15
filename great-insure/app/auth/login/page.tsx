@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import PageLayout from '../../components/PageLayout';
 import WalletButton from '../../components/WalletButton';
+import { useCallback } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,17 +15,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   
-  // Update when wallet connects
-  useEffect(() => {
-    if (connected && publicKey) {
-      console.log('Wallet connected during login:', publicKey.toBase58());
-      // Auto-login when wallet connects
-      handleWalletLogin();
-    }
-  }, [connected, publicKey]);
-  
   // Handle wallet login
-  const handleWalletLogin = async () => {
+  const handleWalletLogin = useCallback(async () => {
     if (!connected || !publicKey || !signMessage) {
       setError('Please connect your wallet first');
       return;
@@ -91,7 +83,16 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [connected, publicKey, signMessage, router]);
+  
+  // Update when wallet connects
+  useEffect(() => {
+    if (connected && publicKey) {
+      console.log('Wallet connected during login:', publicKey.toBase58());
+      // Auto-login when wallet connects
+      handleWalletLogin();
+    }
+  }, [connected, publicKey, handleWalletLogin]);
   
   return (
     <PageLayout>

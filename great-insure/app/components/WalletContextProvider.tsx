@@ -2,7 +2,7 @@
 
 import React, { FC, ReactNode, useMemo, useState, useEffect, Component, ErrorInfo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { Connection } from '@solana/web3.js';
 import { 
   PhantomWalletAdapter, 
   SolflareWalletAdapter, 
@@ -10,7 +10,6 @@ import {
   UnsafeBurnerWalletAdapter
 } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl, Connection } from '@solana/web3.js';
 
 // Import the styles for the wallet adapter
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -64,7 +63,6 @@ const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => 
   const [walletError, setWalletError] = useState<string | null>(null);
 
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'
-  const network = useMemo(() => WalletAdapterNetwork.Devnet, []);
 
   // Get the Solana cluster endpoint URL
   const endpoint = useMemo(() => 'https://api.devnet.solana.com', []);

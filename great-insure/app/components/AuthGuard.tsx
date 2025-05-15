@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthGuardProps {
@@ -16,7 +16,6 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, loading, login } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
   
   useEffect(() => {
     if (!isAuthenticated) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useWallet } from '@/app/hooks/useWallet';
 
@@ -12,73 +12,30 @@ interface UserData {
 }
 
 export default function ProfilePage() {
-  const { connected, address, connect, wallet } = useWallet();
+  const { connected, address, connect, signMessage } = useWallet();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  const handleWalletLogin = async () => {
-    if (!address || !wallet?.adapter.signMessage) return;
-
-    try {
-      setIsAuthenticating(true);
-      setError(null);
-
-      // Create a message to sign
-      const message = `Sign this message to authenticate with Great Insure. Wallet: ${address}`;
-      
-      // Request signature from wallet
-      const signature = await wallet.adapter.signMessage(new TextEncoder().encode(message));
-      
-      // Send to backend for verification
-      const loginResponse = await fetch('/api/auth/wallet-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          walletAddress: address,
-          message,
-          signature: Buffer.from(signature).toString('hex'),
-        }),
-      });
-
-      if (!loginResponse.ok) {
-        throw new Error('Failed to authenticate with wallet');
-      }
-
-      // After successful login, fetch user data
-      await fetchUserData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to authenticate with wallet');
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
-
-  const fetchUserData = async () => {
+  const fetchUserData: () => Promise<void> = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const response = await fetch('/api/user/profile', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Important for sending cookies
+        credentials: 'include',
       });
-
       if (!response.ok) {
         if (response.status === 401) {
-          // If unauthorized, try to authenticate
           await handleWalletLogin();
           return;
         }
         throw new Error('Failed to fetch user data');
       }
-
       const data = await response.json();
       if (data.success) {
         setUserData(data.data);
@@ -90,7 +47,36 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const handleWalletLogin: () => Promise<void> = useCallback(async () => {
+    if (!address || !signMessage) return;
+    try {
+      setIsAuthenticating(true);
+      setError(null);
+      const message = `Sign this message to authenticate with Great Insure. Wallet: ${address}`;
+      const signature = await signMessage(new TextEncoder().encode(message));
+      const loginResponse = await fetch('/api/auth/wallet-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: address,
+          message,
+          signature: Buffer.from(signature).toString('hex'),
+        }),
+      });
+      if (!loginResponse.ok) {
+        throw new Error('Failed to authenticate with wallet');
+      }
+      await fetchUserData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to authenticate with wallet');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [address, signMessage, fetchUserData]);
 
   useEffect(() => {
     if (connected && address) {
@@ -98,7 +84,7 @@ export default function ProfilePage() {
     } else {
       setLoading(false);
     }
-  }, [connected, address]);
+  }, [connected, address, fetchUserData]);
 
   if (loading || isAuthenticating) {
     return (

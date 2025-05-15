@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { useCallback } from 'react';
 
 interface UserData {
   id: number;
@@ -29,7 +30,7 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch user data when authenticated
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!isAuthenticated || !walletAddress) {
       return;
     }
@@ -62,7 +63,7 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, walletAddress]);
 
   // Refresh user data - expose this to consumers
   const refreshUserData = async () => {
@@ -117,7 +118,7 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
     } else {
       setUserData(null);
     }
-  }, [isAuthenticated, walletAddress]);
+  }, [isAuthenticated, walletAddress, fetchUserData]);
 
   return (
     <UserDataContext.Provider

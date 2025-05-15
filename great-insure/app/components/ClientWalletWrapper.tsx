@@ -57,16 +57,15 @@ export default function ClientWalletWrapper({ children }: ClientWalletWrapperPro
       
       // Check for each wallet
       for (const name of walletNames) {
-        if ((window as any)[name]) {
+        if ((window as WindowWithPhantom)[name as keyof WindowWithPhantom]) {
           walletFound = true;
           detectedWalletName = name;
           console.log(`Found wallet: ${name}`);
           break;
         }
       }
-      
       // Also check window.solana
-      if (!walletFound && (window as any).solana) {
+      if (!walletFound && (window as WindowWithPhantom).solana) {
         walletFound = true;
         detectedWalletName = 'solana';
         console.log('Found window.solana wallet');

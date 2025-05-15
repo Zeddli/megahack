@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import PageLayout from '../../components/PageLayout';
 import WalletButton from '../../components/WalletButton';
+import { useCallback } from 'react';
 
 export default function WalletConnectPage() {
   const router = useRouter();
@@ -19,43 +20,8 @@ export default function WalletConnectPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  // Check if user is already authenticated
-  useEffect(() => {
-    const checkExistingAuth = () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        const walletAddress = localStorage.getItem('walletAddress');
-        
-        // If already authenticated, redirect to the intended page
-        if (token && walletAddress) {
-          console.log('User already authenticated, redirecting to:', redirectPath);
-          router.push(redirectPath);
-          return true;
-        }
-        return false;
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        return false;
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-    
-    // Run the check
-    checkExistingAuth();
-  }, [router, redirectPath]);
-  
-  // Update when wallet connects
-  useEffect(() => {
-    if (connected && publicKey && !checkingAuth) {
-      console.log('Wallet connected:', publicKey.toBase58());
-      // Auto-authenticate when wallet connects
-      handleWalletAuth();
-    }
-  }, [connected, publicKey, checkingAuth]);
-  
   // Handle wallet authentication
-  const handleWalletAuth = async () => {
+  const handleWalletAuth = useCallback(async () => {
     if (!connected || !publicKey || !signMessage) {
       setError('Please connect your wallet first');
       return;
@@ -129,7 +95,42 @@ export default function WalletConnectPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [connected, publicKey, signMessage, router, redirectPath]);
+  
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkExistingAuth = () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const walletAddress = localStorage.getItem('walletAddress');
+        
+        // If already authenticated, redirect to the intended page
+        if (token && walletAddress) {
+          console.log('User already authenticated, redirecting to:', redirectPath);
+          router.push(redirectPath);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        return false;
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+    
+    // Run the check
+    checkExistingAuth();
+  }, [router, redirectPath]);
+  
+  // Update when wallet connects
+  useEffect(() => {
+    if (connected && publicKey && !checkingAuth) {
+      console.log('Wallet connected:', publicKey.toBase58());
+      // Auto-authenticate when wallet connects
+      handleWalletAuth();
+    }
+  }, [connected, publicKey, checkingAuth, handleWalletAuth]);
   
   // Show loading state while checking authentication
   if (checkingAuth) {

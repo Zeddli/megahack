@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 /**
  * Generate a nonce for wallet signature verification
  * The nonce is used as part of the message that will be signed by the wallet
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Generate a random nonce
     const nonce = crypto.randomBytes(16).toString('hex');
-    
     // Create the message to be signed
     const message = `Farm Protection Authentication - Nonce: ${nonce} - Timestamp: ${Date.now()}`;
     

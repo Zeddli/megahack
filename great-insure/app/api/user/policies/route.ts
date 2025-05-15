@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 export async function GET() {
   try {
     // Check if user is authenticated by reading token from cookie
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
     
     if (!token) {

@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
+
 const JWT_SECRET = process.env.JWT_SECRET || 'farm-protection-secret-key-development-only';
 
 interface JWTSignOptions {
@@ -13,7 +14,7 @@ export function jwtSign(payload: Record<string, unknown>, options: JWTSignOption
     expiresIn: options.expiresIn ?? '1h',
     audience: options.audience ?? 'farm-protection-app',
     issuer: options.issuer ?? 'farm-protection-api',
-  });
+  } as import('jsonwebtoken').SignOptions);
 }
 
 export function jwtVerify(token: string): JwtPayload | string | null {

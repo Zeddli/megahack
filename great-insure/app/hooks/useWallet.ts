@@ -1,7 +1,10 @@
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Transaction } from '@solana/web3.js';
+import { Transaction, Connection } from '@solana/web3.js';
+
+// Create a Solana connection instance (adjust endpoint as needed)
+const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 
 export function useWallet() {
   const {
@@ -13,7 +16,6 @@ export function useWallet() {
     wallet,
     wallets,
     connect,
-    signMessage,
   } = useSolanaWallet();
   const router = useRouter();
 
@@ -51,11 +53,12 @@ export function useWallet() {
   }, [disconnect, router, publicKey]);
 
   const handleSignMessage = useCallback(async (message: Uint8Array) => {
-    if (!wallet?.adapter.signMessage) {
+    const adapter = wallet?.adapter as { signMessage?: (msg: Uint8Array) => Promise<Uint8Array> };
+    if (!adapter?.signMessage) {
       throw new Error('Wallet does not support message signing');
     }
     try {
-      return await wallet.adapter.signMessage(message);
+      return await adapter.signMessage(message);
     } catch (error) {
       console.error('Error signing message:', error);
       throw error;
@@ -63,13 +66,17 @@ export function useWallet() {
   }, [wallet]);
 
   const handleSignTransaction = useCallback(async (transaction: Transaction) => {
-    if (!wallet?.adapter.signTransaction) {
-      throw new Error('Wallet does not support transaction signing');
+    const adapter = wallet?.adapter as { signMessage?: (msg: Uint8Array) => Promise<Uint8Array> };
+    if (!adapter?.signMessage) {
+      throw new Error('Wallet does not support message signing');
+    }
+    if (!wallet) {
+      throw new Error('Wallet is not connected');
     }
     try {
-      return await wallet.adapter.signTransaction(transaction);
+      return await wallet.adapter.sendTransaction(transaction, connection);
     } catch (error) {
-      console.error('Error signing transaction:', error);
+      console.error('Error sending transaction:', error);
       throw error;
     }
   }, [wallet]);

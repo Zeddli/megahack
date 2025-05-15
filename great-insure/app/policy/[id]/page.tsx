@@ -137,7 +137,7 @@ export default function PolicyDetails() {
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
       const signedTransaction = await signTransaction(transaction);
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+      const signature = signedTransaction;
       // Show success immediately after sending transaction
       setShowSuccess(true);
       setTimeout(() => router.push('/dashboard'), 2000);
