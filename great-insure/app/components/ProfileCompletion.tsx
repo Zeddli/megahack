@@ -65,7 +65,7 @@ const ProfileCompletion = ({ onComplete, userData }: ProfileCompletionProps) => 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-2">Complete Your Profile</h2>
-      <p className="text-gray-600 mb-6">Please provide your information to complete your profile setup</p>
+      <p className="text-black-600 mb-6">Please provide your information to complete your profile setup</p>
 
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
@@ -76,7 +76,7 @@ const ProfileCompletion = ({ onComplete, userData }: ProfileCompletionProps) => 
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="fullName" className="block text-sm font-medium text-black-700">
               Full Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -92,7 +92,7 @@ const ProfileCompletion = ({ onComplete, userData }: ProfileCompletionProps) => 
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-black-700">
               Phone Number
             </label>
             <input

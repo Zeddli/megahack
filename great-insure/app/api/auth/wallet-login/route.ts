@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtSign } from '@/app/lib/jwt';
 import * as nacl from 'tweetnacl';
 import { PublicKey } from '@solana/web3.js';
+import { mockDataStore } from '@/app/lib/mockData';
 
 /**
  * API route for wallet-only authentication
@@ -14,10 +15,32 @@ export async function POST(request: NextRequest) {
     const { walletAddress, message, signature } = await request.json();
     
     // Validate inputs
-    if (!walletAddress || !message || !signature) {
-      console.error('Wallet address, message, and signature are required');
+    if (!walletAddress) {
+      console.error('Wallet address is required');
       return NextResponse.json(
-        { success: false, message: 'Wallet address, message, and signature are required' },
+        { success: false, message: 'Wallet address is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Clear any existing mock data for this wallet
+    mockDataStore.clearUserData(walletAddress);
+    
+    // If this is just a mock data clear request (no signature provided)
+    if (!signature || signature === 'mock-signature') {
+      return NextResponse.json({
+        success: true,
+        message: 'Mock data cleared successfully',
+        data: {
+          walletAddress
+        }
+      });
+    }
+    
+    // Otherwise, proceed with normal authentication
+    if (!message) {
+      return NextResponse.json(
+        { success: false, message: 'Message is required for authentication' },
         { status: 400 }
       );
     }
@@ -84,7 +107,7 @@ export async function POST(request: NextRequest) {
           user: {
             walletAddress
           },
-          redirectTo: '/dashboard' // Redirect to dashboard
+          redirectTo: '/dashboard'
         }
       });
       

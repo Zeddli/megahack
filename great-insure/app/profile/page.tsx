@@ -1,180 +1,210 @@
 "use client"
 
-import { useState } from 'react';
-import PageLayout from '../components/PageLayout';
-import WalletButton from '../components/WalletButton';
-import AuthGuard from '../components/AuthGuard';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useWallet } from '@/app/hooks/useWallet';
+
+interface UserData {
+  wallet: string;
+  accountStatus: string;
+  policies: number;
+  totalCoverage: string;
+}
 
 export default function ProfilePage() {
-  const [editing, setEditing] = useState<boolean>(false);
-  const { logout } = useAuth();
-  
-  const profileContent = (
-    <PageLayout>
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Your Profile</h1>
-        <p className="text-secondary">Manage your account settings and preferences</p>
-      </div>
+  const { connected, address, connect, wallet } = useWallet();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const handleWalletLogin = async () => {
+    if (!address || !wallet?.adapter.signMessage) return;
+
+    try {
+      setIsAuthenticating(true);
+      setError(null);
+
+      // Create a message to sign
+      const message = `Sign this message to authenticate with Great Insure. Wallet: ${address}`;
       
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          {/* User Profile Information with Wallet Integration - removed */}
-          
-          {/* Account Summary - Now appears first in the main content */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="p-6 border-b border-muted">
-              <h2 className="text-2xl font-bold">Account Summary</h2>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <div className="text-sm text-secondary">Account Status</div>
-                  <div className="font-medium">Active</div>
-                </div>
-                
-                <div>
-                  <div className="text-sm text-secondary">Member Since</div>
-                  <div className="font-medium">January 2023</div>
-                </div>
-                
-                <div>
-                  <div className="text-sm text-secondary">Active Policies</div>
-                  <div className="font-medium">2</div>
-                </div>
-                
-                <div>
-                  <div className="text-sm text-secondary">Total Coverage</div>
-                  <div className="font-medium">$350.00</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Notification Preferences - Now appears after Account Summary */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mt-8">
-            <div className="p-6 border-b border-muted">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Notification Preferences</h2>
-                {!editing ? (
-                  <button 
-                    className="text-black hover:text-black-hover"
-                    onClick={() => setEditing(true)}
-                  >
-                    Edit
-                  </button>
-                ) : (
-                  <div className="flex space-x-3">
-                    <button 
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => setEditing(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      className="text-black hover:text-black-hover font-medium"
-                      onClick={() => setEditing(false)}
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    id="email" 
-                    name="email"
-                    defaultChecked={true}
-                    disabled={!editing}
-                    className="h-4 w-4 text-black focus:ring-primary-hover border-gray-300 rounded"
-                  />
-                  <label htmlFor="email" className="ml-2 block text-sm">
-                    Email Notifications
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    id="sms" 
-                    name="sms"
-                    defaultChecked={true}
-                    disabled={!editing}
-                    className="h-4 w-4 text-black focus:ring-primary-hover border-gray-300 rounded"
-                  />
-                  <label htmlFor="sms" className="ml-2 block text-sm">
-                    SMS Notifications
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    id="weatherAlerts" 
-                    name="weatherAlerts"
-                    defaultChecked={true}
-                    disabled={!editing}
-                    className="h-4 w-4 text-black focus:ring-primary-hover border-gray-300 rounded"
-                  />
-                  <label htmlFor="weatherAlerts" className="ml-2 block text-sm">
-                    Weather Alerts
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    id="policyReminders" 
-                    name="policyReminders"
-                    defaultChecked={false}
-                    disabled={!editing}
-                    className="h-4 w-4 text-black focus:ring-primary-hover border-gray-300 rounded"
-                  />
-                  <label htmlFor="policyReminders" className="ml-2 block text-sm">
-                    Policy Renewal Reminders
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden sticky top-24">
-            <div className="p-4 bg-primary text-black">
-              <h3 className="font-bold">Wallet Options</h3>
-            </div>
-            
-            <div className="p-4">
-              <div className="mb-3">
-                <div className="text-sm text-secondary mb-2">Wallet Connection</div>
-                <WalletButton />
-              </div>
-              
-              <hr className="my-4 border-muted" />
-              
-              <button className="w-full py-2 mt-2 bg-primary-hover text-black rounded-md hover:opacity-90 transition-all font-medium">
-                Change Password
-              </button>
-              
-              <button 
-                className="w-full py-2 mt-2 text-red-500 hover:text-red-700 transition-colors font-medium"
-                onClick={logout}
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
+      // Request signature from wallet
+      const signature = await wallet.adapter.signMessage(new TextEncoder().encode(message));
+      
+      // Send to backend for verification
+      const loginResponse = await fetch('/api/auth/wallet-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: address,
+          message,
+          signature: Buffer.from(signature).toString('hex'),
+        }),
+      });
+
+      if (!loginResponse.ok) {
+        throw new Error('Failed to authenticate with wallet');
+      }
+
+      // After successful login, fetch user data
+      await fetchUserData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to authenticate with wallet');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/user/profile', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for sending cookies
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // If unauthorized, try to authenticate
+          await handleWalletLogin();
+          return;
+        }
+        throw new Error('Failed to fetch user data');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setUserData(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch user data');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (connected && address) {
+      fetchUserData();
+    } else {
+      setLoading(false);
+    }
+  }, [connected, address]);
+
+  if (loading || isAuthenticating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!connected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-black-900 mb-4">Connect Your Wallet</h2>
+          <p className="text-black-600 mb-6">Please connect your wallet to view your profile</p>
+          <button
+            onClick={() => connect()}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Connect Wallet
+          </button>
         </div>
       </div>
-    </PageLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-red-600 text-center">
+          <p className="text-xl font-semibold mb-2">Error</p>
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-black-600 text-center">
+          <p className="text-xl font-semibold">No Profile Data</p>
+          <p>Your wallet is connected but no profile data was found</p>
+          <button
+            onClick={handleWalletLogin}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Sign Message to Authenticate
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Sticky Navigation Bar */}
+      
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100"
+        >
+          <h2 className="text-2xl font-bold text-black-900 mb-6">Account Summary</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <div className="mb-4">
+                <span className="block text-black-500 text-sm mb-1">Wallet Address</span>
+                <span className="font-mono text-base text-indigo-700 bg-indigo-50 px-2 py-1 rounded">{userData.wallet}</span>
+              </div>
+              <div className="mb-4">
+                <span className="block text-black-500 text-sm mb-1">Account Status</span>
+                <span className="font-semibold text-lg text-green-700">{userData.accountStatus}</span>
+              </div>
+            </div>
+            <div>
+              <div className="mb-4">
+                <span className="block text-black-500 text-sm mb-1">Active Policies</span>
+                <span className="font-semibold text-lg text-black-900">{userData.policies}</span>
+              </div>
+              <div className="mb-4">
+                <span className="block text-black-500 text-sm mb-1">Total Coverage</span>
+                <span className="font-semibold text-lg text-green-700">{userData.totalCoverage}</span>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      </main>
+
+      {/* Sticky Footer */}
+      <footer className="sticky bottom-0 z-20 bg-white border-t border-gray-200 shadow-inner">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <span className="text-black-500 text-sm">© 2024 Great Insure. All rights reserved.</span>
+          <span className="text-black-400 text-xs">Powered by Solana</span>
+        </div>
+      </footer>
+    </div>
   );
-  
-  return <AuthGuard fallback={null}>{profileContent}</AuthGuard>;
 } 

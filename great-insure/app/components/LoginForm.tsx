@@ -87,7 +87,7 @@ const LoginForm = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-black-700">
             Email Address
           </label>
           <input
@@ -103,7 +103,7 @@ const LoginForm = () => {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-black-700">
             Password
           </label>
           <input
@@ -126,7 +126,7 @@ const LoginForm = () => {
               type="checkbox"
               className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-black-700">
               Remember me
             </label>
           </div>
@@ -150,7 +150,7 @@ const LoginForm = () => {
       </form>
 
       <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-black-600">
           Don&apos;t have an account?{' '}
           <Link href="/auth/signup" className="text-blue-600 hover:text-blue-800 font-medium">
             Sign Up

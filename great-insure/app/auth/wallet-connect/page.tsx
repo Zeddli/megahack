@@ -138,7 +138,7 @@ export default function WalletConnectPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-gray-600">Checking authentication status...</p>
+            <p className="text-black-600">Checking authentication status...</p>
           </div>
         </div>
       </PageLayout>
@@ -151,7 +151,7 @@ export default function WalletConnectPage() {
         <div className="bg-white p-8 rounded-xl shadow-lg">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Connect Your Wallet</h1>
-            <p className="text-gray-600">Access the platform with your crypto wallet</p>
+            <p className="text-black-600">Access the platform with your crypto wallet</p>
           </div>
           
           {error && (
@@ -175,7 +175,7 @@ export default function WalletConnectPage() {
           </div>
           
           <div className="border-t border-gray-200 pt-6">
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-black-600">
               <p className="mb-2">By connecting your wallet, you agree to our</p>
               <div className="flex justify-center space-x-4">
                 <a href="/terms" className="text-blue-600 hover:underline">Terms of Service</a>
@@ -196,7 +196,7 @@ export default function WalletConnectPage() {
               </div>
               <div>
                 <h3 className="font-medium">Enhanced Security</h3>
-                <p className="text-sm text-gray-600">Your private key never leaves your device</p>
+                <p className="text-sm text-black-600">Your private key never leaves your device</p>
               </div>
             </div>
             
@@ -208,7 +208,7 @@ export default function WalletConnectPage() {
               </div>
               <div>
                 <h3 className="font-medium">One-Click Access</h3>
-                <p className="text-sm text-gray-600">No passwords to remember or reset</p>
+                <p className="text-sm text-black-600">No passwords to remember or reset</p>
               </div>
             </div>
             
@@ -222,7 +222,7 @@ export default function WalletConnectPage() {
               </div>
               <div>
                 <h3 className="font-medium">Access Your Assets</h3>
-                <p className="text-sm text-gray-600">Manage your digital assets in one place</p>
+                <p className="text-sm text-black-600">Manage your digital assets in one place</p>
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -32,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem('authToken');
-        const storedWalletAddress = localStorage.getItem('walletAddress');
+        const token = Cookies.get('authToken');
+        const storedWalletAddress = Cookies.get('walletAddress');
         
         if (token && storedWalletAddress) {
           setAuthState({
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (connected && publicKey) {
       const walletAddress = publicKey.toBase58();
-      const storedWalletAddress = localStorage.getItem('walletAddress');
+      const storedWalletAddress = Cookies.get('walletAddress');
       
       // If wallet connected matches stored wallet, consider authenticated
       if (storedWalletAddress === walletAddress) {
@@ -101,8 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
       });
       
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('walletAddress');
+      // Remove cookies
+      Cookies.remove('authToken');
+      Cookies.remove('walletAddress');
       
       setAuthState(prev => ({
         ...prev,

@@ -11,6 +11,11 @@ import { errorHandler } from './utils/errors';
 import AuditLogService, { AuditAction, AuditEntity } from './services/auditLogService';
 // Import policy status tracking service to start cron job
 import './services/policyStatusService';
+import dotenv from 'dotenv';
+import userRoutes from './routes/userRoutes';
+
+// Load environment variables
+dotenv.config();
 
 // Load routes as they're created
 // If these modules don't exist yet, uncomment them when they're created
@@ -21,12 +26,11 @@ import './services/policyStatusService';
 // import oracleRoutes from './routes/oracleRoutes';
 // import paymentRoutes from './routes/paymentRoutes';
 // import payoutRoutes from './routes/payoutRoutes';
-// import userRoutes from './routes/userRoutes';
 // import authRoutes from './routes/authRoutes';
 
 // Initialize Express app
 const app: Express = express();
-const port = config.port;
+const port = process.env.PORT || 3001;
 
 // Initialize scheduled jobs service
 const scheduledJobsService = new ScheduledJobsService();
@@ -77,7 +81,7 @@ app.use((req: any, res: Response, next) => {
 // app.use('/api/oracles', oracleRoutes);
 // app.use('/api/payments', paymentRoutes);
 // app.use('/api/payouts', payoutRoutes);
-// app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
 // app.use('/api/auth', authRoutes);
 
 // Setup Swagger documentation
@@ -113,14 +117,6 @@ try {
   console.log('Registered: Risk pool routes');
 } catch (error) {
   console.warn('Risk pool routes not available yet');
-}
-
-try {
-  const userRoutes = require('./routes/userRoutes').default;
-  app.use('/api/users', userRoutes);
-  console.log('Registered: User routes');
-} catch (error) {
-  console.warn('User routes not available yet');
 }
 
 try {

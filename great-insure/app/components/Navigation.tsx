@@ -1,154 +1,149 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import WalletButton from './WalletButton';
 
 export default function Navigation() {
-  const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isActive = (path: string) => pathname === path;
-  
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/');
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === path;
     }
+    return pathname.startsWith(path);
   };
 
   return (
-    <>
-      {/* Header */}
-      <header className="bg-primary text-black py-4 sticky top-0 z-10 shadow-md">
-        <nav className="container mx-auto flex justify-between items-center px-4">
-          <div className="flex items-center space-x-8">
-            <Link href="/" className="text-2xl font-bold hover:opacity-90 transition-opacity">
-              Great Insure
+    <nav className="w-full bg-white shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <span className="text-2xl font-bold text-black-900">Great Insure</span>
             </Link>
-            <ul className="hidden md:flex space-x-6">
-              <li>
-                <Link 
-                  href="/dashboard" 
-                  className={`py-2 px-1 ${isActive('/dashboard') 
-                    ? 'font-bold border-b-2 border-white' 
-                    : 'hover:border-b-2 border-opacity-70 border-white'}`}
-                >
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/policy" 
-                  className={`py-2 px-1 ${isActive('/policy') 
-                    ? 'font-bold border-b-2 border-white' 
-                    : 'hover:border-b-2 border-opacity-70 border-white'}`}
-                >
-                  Crop Protection
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/weather" 
-                  className={`py-2 px-1 ${isActive('/weather') 
-                    ? 'font-bold border-b-2 border-white' 
-                    : 'hover:border-b-2 border-opacity-70 border-white'}`}
-                >
-                  Weather
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/transaction" 
-                  className={`py-2 px-1 ${isActive('/transaction') 
-                    ? 'font-bold border-b-2 border-white' 
-                    : 'hover:border-b-2 border-opacity-70 border-white'}`}
-                >
-                  Transactions
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/profile" 
-                  className={`py-2 px-1 ${isActive('/profile') 
-                    ? 'font-bold border-b-2 border-white' 
-                    : 'hover:border-b-2 border-opacity-70 border-white'}`}
-                >
-                  Profile
-                </Link>
-              </li>
-            </ul>
+            <div className="hidden md:ml-6 md:flex md:space-x-8">
+              <Link
+                href="/dashboard"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/dashboard')
+                    ? 'border-indigo-500 text-black-900'
+                    : 'border-transparent text-black-500 hover:border-gray-300 hover:text-black-700'
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/policy"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/policy')
+                    ? 'border-indigo-500 text-black-900'
+                    : 'border-transparent text-black-500 hover:border-gray-300 hover:text-black-700'
+                }`}
+              >
+                Crop Protection
+              </Link>
+              <Link
+                href="/transaction"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/transaction')
+                    ? 'border-indigo-500 text-black-900'
+                    : 'border-transparent text-black-500 hover:border-gray-300 hover:text-black-700'
+                }`}
+              >
+                Transactions
+              </Link>
+              <Link
+                href="/profile"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/profile')
+                    ? 'border-indigo-500 text-black-900'
+                    : 'border-transparent text-black-500 hover:border-gray-300 hover:text-black-700'
+                }`}
+              >
+                Profile
+              </Link>
+            </div>
           </div>
-
-          <div className="flex items-center space-x-3">
+          
+          <div className="flex items-center">
             <WalletButton />
-            
-            <button 
-              onClick={handleBack}
-              className="flex items-center bg-primary-hover hover:opacity-90 text-black py-2 px-4 rounded-md transition-all"
-              aria-label="Go back to previous page"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span className="ml-2 hidden sm:inline">Back</span>
-            </button>
-            
-            <button 
-              className="md:hidden bg-primary-hover p-2 rounded-md hover:opacity-90 transition-all"
+            <button
+              className="md:hidden ml-4 inline-flex items-center justify-center p-2 rounded-md text-black-400 hover:text-black-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle mobile menu"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                {mobileMenuOpen ? (
+              <span className="sr-only">Open main menu</span>
+              {mobileMenuOpen ? (
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
+                </svg>
+              ) : (
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+                </svg>
+              )}
             </button>
           </div>
-        </nav>
-      </header>
+        </div>
+      </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-primary-hover text-black py-2 border-t border-opacity-20 border-white">
-          <div className="container mx-auto flex flex-col">
-            <Link 
-              href="/dashboard" 
-              className={`px-4 py-3 ${isActive('/dashboard') ? 'bg-opacity-20 bg-white' : 'hover:bg-opacity-10 hover:bg-white'}`}
+        <div className="md:hidden">
+          <div className="pt-2 pb-3 space-y-1">
+            <Link
+              href="/dashboard"
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive('/dashboard')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'border-transparent text-black-500 hover:bg-gray-50 hover:border-gray-300 hover:text-black-700'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Dashboard
             </Link>
-            <Link 
-              href="/policy" 
-              className={`px-4 py-3 ${isActive('/policy') ? 'bg-opacity-20 bg-white' : 'hover:bg-opacity-10 hover:bg-white'}`}
+            <Link
+              href="/policy"
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive('/policy')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'border-transparent text-black-500 hover:bg-gray-50 hover:border-gray-300 hover:text-black-700'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Crop Protection
             </Link>
-            <Link 
-              href="/weather" 
-              className={`px-4 py-3 ${isActive('/weather') ? 'bg-opacity-20 bg-white' : 'hover:bg-opacity-10 hover:bg-white'}`}
+            <Link
+              href="/weather"
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive('/weather')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'border-transparent text-black-500 hover:bg-gray-50 hover:border-gray-300 hover:text-black-700'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Weather
             </Link>
-            <Link 
-              href="/transaction" 
-              className={`px-4 py-3 ${isActive('/transaction') ? 'bg-opacity-20 bg-white' : 'hover:bg-opacity-10 hover:bg-white'}`}
+            <Link
+              href="/transaction"
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive('/transaction')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'border-transparent text-black-500 hover:bg-gray-50 hover:border-gray-300 hover:text-black-700'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Transactions
             </Link>
-            <Link 
-              href="/profile" 
-              className={`px-4 py-3 ${isActive('/profile') ? 'bg-opacity-20 bg-white' : 'hover:bg-opacity-10 hover:bg-white'}`}
+            <Link
+              href="/profile"
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive('/profile')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'border-transparent text-black-500 hover:bg-gray-50 hover:border-gray-300 hover:text-black-700'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Profile
@@ -156,6 +151,6 @@ export default function Navigation() {
           </div>
         </div>
       )}
-    </>
+    </nav>
   );
 } 

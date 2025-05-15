@@ -114,7 +114,7 @@ export default function LoginPage() {
           )}
         </div>
         
-        <div className="text-center text-sm text-gray-600 mt-4">
+        <div className="text-center text-sm text-black-600 mt-4">
           <p>Connect your wallet to access the platform</p>
           <p className="mt-2">No account creation needed</p>
         </div>

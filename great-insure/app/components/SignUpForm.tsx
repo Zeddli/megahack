@@ -80,7 +80,7 @@ const SignUpForm = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-black-700">
             Email Address
           </label>
           <input
@@ -96,7 +96,7 @@ const SignUpForm = () => {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-black-700">
             Password
           </label>
           <input
@@ -113,7 +113,7 @@ const SignUpForm = () => {
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-black-700">
             Confirm Password
           </label>
           <input
@@ -140,7 +140,7 @@ const SignUpForm = () => {
       </form>
 
       <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-black-600">
           Already have an account?{' '}
           <Link href="/auth/login" className="text-blue-600 hover:text-blue-800 font-medium">
             Log In

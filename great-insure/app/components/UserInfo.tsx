@@ -186,7 +186,7 @@ const UserInfo: FC<UserInfoProps> = ({ hideAuthErrors = true }) => {
           <h2 className="text-2xl font-bold mb-4">Your Profile</h2>
           <div className="text-center py-4">
             <p>Loading profile information...</p>
-            <p className="text-sm text-gray-500 mt-2">Please make sure your wallet is connected.</p>
+            <p className="text-sm text-black-500 mt-2">Please make sure your wallet is connected.</p>
           </div>
         </div>
       );
@@ -226,17 +226,17 @@ const UserInfo: FC<UserInfoProps> = ({ hideAuthErrors = true }) => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-500">Full Name</label>
+          <label className="block text-sm font-medium text-black-500">Full Name</label>
           <div className="mt-1 text-lg">{userData.fullName}</div>
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-500">Email</label>
+          <label className="block text-sm font-medium text-black-500">Email</label>
           <div className="mt-1 text-lg">{userData.email}</div>
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-500">Phone Number</label>
+          <label className="block text-sm font-medium text-black-500">Phone Number</label>
           <div className="mt-1 text-lg">{userData.phoneNumber || 'Not provided'}</div>
         </div>
       </div>
@@ -247,7 +247,7 @@ const UserInfo: FC<UserInfoProps> = ({ hideAuthErrors = true }) => {
         {walletLinked ? (
           <div>
             <div className="flex items-center">
-              <span className="text-sm font-medium text-gray-500 mr-2">Linked Wallet:</span>
+              <span className="text-sm font-medium text-black-500 mr-2">Linked Wallet:</span>
               <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-md">
                 {userData.walletAddress}
               </span>
@@ -268,7 +268,7 @@ const UserInfo: FC<UserInfoProps> = ({ hideAuthErrors = true }) => {
           </div>
         ) : (
           <div>
-            <p className="text-gray-600 mb-3">
+            <p className="text-black-600 mb-3">
               No wallet linked to your account. Link a wallet to enable blockchain features.
             </p>
             

@@ -1,7 +1,7 @@
 "use client";
 
-import { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { ReactNode, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthGuardProps {
@@ -16,6 +16,13 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, loading, login } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!isAuthenticated) {
+      login(pathname);
+    }
+  }, [isAuthenticated, login, pathname]);
   
   // If loading, show loading indicator or fallback
   if (loading) {
@@ -30,9 +37,6 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
-    // Redirect to login
-    login(pathname);
-    
     // Show loading while redirecting
     return (
       <div className="flex items-center justify-center min-h-screen">

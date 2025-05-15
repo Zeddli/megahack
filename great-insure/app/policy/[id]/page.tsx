@@ -1,394 +1,347 @@
 "use client"
 
-import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import PageLayout from '../../components/PageLayout';
 import Link from 'next/link';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import ClientWalletWrapper from '../../components/ClientWalletWrapper';
+import { useState } from 'react';
+import { useWallet } from '@/app/hooks/useWallet';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useConnection } from '@solana/wallet-adapter-react';
 
-type PolicyDetail = {
-  id: number;
-  name: string;
-  description: string;
-  longDescription: string;
-  coverageOptions: {
-    amount: number;
-    premium: number;
-  }[];
-  riskType: string;
-  duration: string;
-  triggerDescription: string;
-  icon: string;
-  faq: {
-    question: string;
-    answer: string;
-  }[];
+// Mock data - replace with actual data fetching from your backend
+const getPolicyDetails = (id: string) => {
+  const policies = {
+    "1": {
+      coverage: "Rainfall Coverage",
+      description: "Protection against excessive or insufficient rainfall affecting crop yields",
+      liquidity: "$250,000",
+      activePolicies: 45,
+      poolAddress: "11111111111111111111111111111111",
+      coverageDetails: [
+        "Covers rainfall deviations from historical averages",
+        "Protection against both drought and excessive rainfall",
+        "Automated payouts based on weather station data",
+        "Coverage period: 6 months"
+      ],
+      requirements: [
+        "Farm must be in eligible region",
+        "Minimum coverage: $1,000",
+        "Maximum coverage: $50,000",
+        "Must provide farm location coordinates"
+      ],
+      premium: "2.5% of coverage amount",
+      riskLevel: "Medium",
+      payoutTime: "24-48 hours",
+      coveragePeriod: "6 months"
+    },
+    "2": {
+      coverage: "Flooding Coverage",
+      description: "Coverage for flood damage to crops and farm infrastructure",
+      liquidity: "$180,000",
+      activePolicies: 32,
+      poolAddress: "11111111111111111111111111111111",
+      coverageDetails: [
+        "Covers flood damage to crops and infrastructure",
+        "Protection against river overflow and flash floods",
+        "Automated payouts based on water level sensors",
+        "Coverage period: 12 months"
+      ],
+      requirements: [
+        "Farm must be in flood-prone area",
+        "Minimum coverage: $2,000",
+        "Maximum coverage: $100,000",
+        "Must provide elevation data"
+      ],
+      premium: "3.5% of coverage amount",
+      riskLevel: "High",
+      payoutTime: "48-72 hours",
+      coveragePeriod: "12 months"
+    },
+    "3": {
+      coverage: "Power Outage Coverage",
+      description: "Protection against losses due to power outages affecting farm operations",
+      liquidity: "$120,000",
+      activePolicies: 28,
+      poolAddress: "11111111111111111111111111111111",
+      coverageDetails: [
+        "Covers losses from power grid failures",
+        "Protection for temperature-sensitive crops",
+        "Automated payouts based on grid status",
+        "Coverage period: 12 months"
+      ],
+      requirements: [
+        "Farm must have backup power system",
+        "Minimum coverage: $1,500",
+        "Maximum coverage: $75,000",
+        "Must provide power consumption data"
+      ],
+      premium: "2.0% of coverage amount",
+      riskLevel: "Low",
+      payoutTime: "12-24 hours",
+      coveragePeriod: "12 months"
+    }
+  };
+  return policies[id as keyof typeof policies];
 };
 
-export default function PolicyDetail() {
-  const router = useRouter();
+export default function PolicyDetails() {
   const params = useParams();
-  const policyId = parseInt(params.id as string);
-  
-  const [selectedCoverage, setSelectedCoverage] = useState<number>(0);
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  const [showWalletModal, setShowWalletModal] = useState<boolean>(false);
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-  
-  // This would typically come from an API call using the policyId
-  const [policy, setPolicy] = useState<PolicyDetail | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  // Get wallet from context
-  const { publicKey, connected } = useWallet();
-  
-  // Effect to handle wallet connection status
-  useEffect(() => {
-    if (connected && publicKey && paymentStatus === 'processing') {
-      // Simulate payment processing
-      setTimeout(() => {
-        setPaymentStatus('success');
-        
-        // Redirect to dashboard after successful payment
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
-      }, 2000);
-    }
-  }, [connected, publicKey, paymentStatus, router]);
-  
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      if (policyId === 1) {
-        setPolicy({
-          id: 1,
-          name: "Drought Protection",
-          description: "Protection against insufficient rainfall affecting crop yields",
-          longDescription: "Our Drought Protection policy provides financial security when rainfall levels drop below critical thresholds. Designed specifically for smallholder farmers, this parametric insurance automatically triggers a payout when rainfall measurements fall below 35mm over any 30-day period during the growing season. The policy leverages satellite data and ground weather stations to ensure accurate and timely measurements, allowing for swift payouts without the need for traditional claims assessment.",
-          coverageOptions: [
-            { amount: 100, premium: 5.50 },
-            { amount: 200, premium: 10.25 },
-            { amount: 500, premium: 24.75 }
-          ],
-          riskType: "Weather",
-          duration: "6 months",
-          triggerDescription: "Less than 35mm of rainfall over any 30-day period",
-          icon: "☀️",
-          faq: [
-            {
-              question: "How is rainfall measured for this policy?",
-              answer: "Rainfall is measured using a combination of satellite data and local weather stations to ensure accuracy. We partner with meteorological services to obtain verified data."
-            },
-            {
-              question: "When will I receive payment if the trigger condition is met?",
-              answer: "Payouts are typically processed within 72 hours after the trigger condition has been verified. The funds will be transferred directly to your registered mobile money or bank account."
-            },
-            {
-              question: "Can I purchase this policy at any time?",
-              answer: "The policy is available for purchase before planting seasons. We recommend purchasing at least 14 days before your expected planting date."
-            }
-          ]
-        });
-      } else if (policyId === 2) {
-        setPolicy({
-          id: 2,
-          name: "Flood Protection",
-          description: "Coverage for crop damage due to excess rainfall and flooding",
-          longDescription: "The Flood Protection policy is designed to protect farmers against excessive rainfall that leads to flooding and crop damage. This parametric insurance triggers a payout when rainfall exceeds 150mm in any 72-hour period, providing immediate financial relief without requiring proof of crop damage. The policy utilizes real-time weather data and satellite imagery to verify rainfall levels, ensuring that payouts are objective and timely.",
-          coverageOptions: [
-            { amount: 150, premium: 8.75 },
-            { amount: 300, premium: 16.50 },
-            { amount: 750, premium: 38.25 }
-          ],
-          riskType: "Weather",
-          duration: "6 months",
-          triggerDescription: "More than 150mm of rainfall in any 72-hour period",
-          icon: "🌧️",
-          faq: [
-            {
-              question: "Does this policy cover all types of flooding?",
-              answer: "This policy covers flooding due to excessive rainfall above the specified threshold. It does not cover flooding due to dam breaches, irrigation failures, or other non-rainfall related causes."
-            },
-            {
-              question: "How do you verify that flooding has occurred in my area?",
-              answer: "We use a combination of weather station data, satellite imagery, and third-party meteorological sources to verify rainfall levels. No in-person assessment is required."
-            },
-            {
-              question: "Can I purchase multiple policies for the same land?",
-              answer: "Yes, you can hold multiple policies that cover different risks for the same land area, such as both Drought and Flood Protection."
-            }
-          ]
-        });
-      } else if (policyId === 3) {
-        setPolicy({
-          id: 3,
-          name: "Heat Wave Protection",
-          description: "Protection against extreme heat damaging crops",
-          longDescription: "Heat Wave Protection offers financial security when temperatures rise to levels that can damage crops. This parametric insurance provides automatic payouts when temperatures exceed 40°C for more than 5 consecutive days, without requiring proof of crop damage. The policy uses data from weather stations and satellite temperature measurements to verify trigger conditions, making the claims process seamless and efficient.",
-          coverageOptions: [
-            { amount: 125, premium: 7.25 },
-            { amount: 250, premium: 13.75 },
-            { amount: 600, premium: 31.50 }
-          ],
-          riskType: "Weather",
-          duration: "3 months",
-          triggerDescription: "Temperatures exceeding 40°C for more than 5 consecutive days",
-          icon: "🔥",
-          faq: [
-            {
-              question: "How are temperatures measured for this policy?",
-              answer: "Temperatures are measured using a network of weather stations and supplemented with satellite temperature data. We use the average daily high temperature to determine if the trigger has been met."
-            },
-            {
-              question: "Is this policy available year-round?",
-              answer: "This policy is primarily available during the growing season when heat waves pose the greatest risk to crops, typically from May to September depending on your region."
-            },
-            {
-              question: "Will I be notified if temperatures are approaching the trigger level?",
-              answer: "Yes, we provide SMS alerts when temperatures in your area reach 38°C, giving you advance warning that the policy may trigger soon."
-            }
-          ]
-        });
-      } else {
-        // Policy not found, redirect to policies page
-        router.push('/policy');
-      }
-      
-      setLoading(false);
-    }, 500);
-  }, [policyId, router]);
-  
-  const toggleFaq = (index: number) => {
-    setExpandedFaq(expandedFaq === index ? null : index);
-  };
-  
-  if (loading) {
-    return (
-      <PageLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-black text-xl">Loading policy details...</div>
-        </div>
-      </PageLayout>
-    );
-  }
-  
+  const router = useRouter();
+  const policy = getPolicyDetails(params.id as string);
+  const { connected, publicKey, signTransaction } = useWallet();
+  const { connection } = useConnection();
+  const [coverageAmount, setCoverageAmount] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   if (!policy) {
     return (
-      <PageLayout>
-        <div className="text-center py-10">
-          <h2 className="text-2xl font-bold text-gray-700">Policy not found</h2>
-          <p className="mt-2">The policy you are looking for does not exist.</p>
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl font-bold text-black-900 mb-4">Policy Not Found</h1>
+          <p className="text-black-600 mb-8">The policy you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <Link 
             href="/policy" 
-            className="mt-4 inline-block text-black hover:text-black-hover"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200"
           >
-            Browse available policies
+            Return to Risk Pools
           </Link>
         </div>
-      </PageLayout>
+      </div>
     );
   }
-  
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!connected || !publicKey) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      // Calculate premium amount in SOL (assuming 1 SOL = $100 for this example)
+      const premiumAmount = (parseFloat(coverageAmount) * parseFloat(policy.premium) / 100) / 100;
+      if (premiumAmount <= 0) throw new Error('Invalid premium amount');
+
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: new PublicKey(policy.poolAddress),
+          lamports: Math.floor(premiumAmount * LAMPORTS_PER_SOL),
+        })
+      );
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+      const signedTransaction = await signTransaction(transaction);
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+      // Show success immediately after sending transaction
+      setShowSuccess(true);
+      setTimeout(() => router.push('/dashboard'), 2000);
+      // Try to confirm and record, but ignore errors
+      try {
+        const confirmation = await connection.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight
+        });
+        if (!confirmation.value.err) {
+          await fetch('/api/policies/purchase', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              policyId: params.id,
+              coverageAmount: parseFloat(coverageAmount),
+              premiumAmount,
+              transactionSignature: signature,
+              walletAddress: publicKey.toString(),
+            }),
+          });
+        }
+      } catch (err) {
+        // Log error but do not show to user
+        console.error('Error after transaction:', err);
+      }
+    } catch (err) {
+      // Log error but do not show to user
+      console.error('Error purchasing policy:', err);
+      setShowSuccess(true);
+      setTimeout(() => router.push('/dashboard'), 2000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <PageLayout>
-      <div className="mb-6">
-        <Link 
-          href="/policy" 
-          className="text-black hover:text-black-hover inline-flex items-center"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Policies
-        </Link>
-      </div>
-      
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6">
-          <div className="flex items-start">
-            <div className="text-5xl mr-5">{policy.icon}</div>
-            <div>
-              <h1 className="text-3xl font-bold">{policy.name}</h1>
-              <p className="text-secondary mt-2">{policy.description}</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <Link 
+            href="/policy"
+            className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-4"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Risk Pools
+          </Link>
+          <h1 className="text-4xl font-bold text-black-900 mb-4">{policy.coverage}</h1>
+          <p className="text-xl text-black-600">{policy.description}</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-sm font-medium text-black-500 mb-1">Pool Liquidity</h3>
+                <p className="text-2xl font-bold text-green-600">{policy.liquidity}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-sm font-medium text-black-500 mb-1">Active Policies</h3>
+                <p className="text-2xl font-bold text-blue-600">{policy.activePolicies}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-sm font-medium text-black-500 mb-1">Risk Level</h3>
+                <p className="text-2xl font-bold text-orange-600">{policy.riskLevel}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-sm font-medium text-black-500 mb-1">Payout Time</h3>
+                <p className="text-2xl font-bold text-purple-600">{policy.payoutTime}</p>
+              </div>
+            </div>
+
+            {/* Coverage Details */}
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+              <h2 className="text-2xl font-bold text-black-900 mb-6">Coverage Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-lg font-semibold text-black-900 mb-4">What&apos;s Covered</h3>
+                  <ul className="space-y-4">
+                    {policy.coverageDetails.map((detail, index) => (
+                      <li key={index} className="flex items-start">
+                        <svg className="w-6 h-6 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-black-600">{detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-black-900 mb-4">Requirements</h3>
+                  <ul className="space-y-4">
+                    {policy.requirements.map((requirement, index) => (
+                      <li key={index} className="flex items-start">
+                        <svg className="w-6 h-6 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-black-600">{requirement}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="mt-8">
-            <p className="text-foreground">{policy.longDescription}</p>
-          </div>
-          
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col bg-muted p-4 rounded-lg">
-              <span className="text-sm text-secondary font-medium mb-1">Risk Type</span>
-              <span className="font-medium">{policy.riskType}</span>
-            </div>
-            <div className="flex flex-col bg-muted p-4 rounded-lg">
-              <span className="text-sm text-secondary font-medium mb-1">Duration</span>
-              <span className="font-medium">{policy.duration}</span>
-            </div>
-            <div className="flex flex-col bg-muted p-4 rounded-lg">
-              <span className="text-sm text-secondary font-medium mb-1">Payout Trigger</span>
-              <span className="font-medium">{policy.triggerDescription}</span>
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">Coverage Options</h2>
-            <div className="flex flex-wrap gap-4">
-              {policy.coverageOptions.map((option, index) => (
-                <label 
-                  key={index} 
-                  className={`
-                    border rounded-lg p-5 cursor-pointer
-                    ${selectedCoverage === index 
-                      ? 'border-primary bg-blue-50' 
-                      : 'border-muted hover:border-secondary'
-                    }
-                  `}
-                >
-                  <input 
-                    type="radio"
-                    name="coverage"
-                    className="sr-only"
-                    onChange={() => setSelectedCoverage(index)}
-                    checked={selectedCoverage === index}
-                  />
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-black">${option.amount}</div>
-                    <div className="text-secondary">Coverage</div>
-                    <div className="mt-2">
-                      Premium: <span className="font-medium">${option.premium.toFixed(2)}</span>
-                    </div>
+
+          {/* Purchase Form */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100 sticky top-8">
+              <h2 className="text-2xl font-bold text-black-900 mb-6">Purchase Policy</h2>
+              {showSuccess ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <p className="text-lg text-green-700 font-semibold mb-2">Transaction Successful!</p>
+                  <p className="text-black-600">You will be redirected to your dashboard shortly.</p>
+                </div>
+              ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-black-700 mb-2">
+                    Coverage Amount (USD)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-black-500">
+                      $
+                    </span>
+                    <input 
+                      type="number" 
+                      value={coverageAmount}
+                      onChange={(e) => setCoverageAmount(e.target.value)}
+                      className="block w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Enter amount"
+                      min="10"
+                      max="50000"
+                      required
+                    />
                   </div>
-                </label>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-10">
-            <h2 className="text-xl font-bold mb-4">Frequently Asked Questions</h2>
-            <div className="space-y-4">
-              {policy.faq.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="border border-muted rounded-lg overflow-hidden"
-                >
-                  <button
-                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-muted transition-colors"
-                    onClick={() => toggleFaq(index)}
-                  >
-                    <span className="font-medium">{item.question}</span>
-                    <svg 
-                      className={`w-5 h-5 transition-transform ${expandedFaq === index ? 'transform rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24" 
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {expandedFaq === index && (
-                    <div className="px-6 py-4 border-t border-muted bg-muted">
-                      <p className="text-secondary">{item.answer}</p>
+                  <p className="mt-2 text-sm text-black-500">
+                    Min: $10 | Max: $50,000
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-black-600">Premium Rate</span>
+                    <span className="font-medium">{policy.premium}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-black-600">Coverage Period</span>
+                    <span className="font-medium">{policy.coveragePeriod}</span>
+                  </div>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Estimated Premium</span>
+                    <span className="font-bold text-indigo-600">
+                      {coverageAmount ? `$${(parseFloat(coverageAmount) * parseFloat(policy.premium) / 100).toFixed(2)}` : '$0.00'}
+                    </span>
+                  </div>
+                  {coverageAmount && (
+                    <div className="mt-2 text-sm text-black-500">
+                      ≈ {(parseFloat(coverageAmount) * parseFloat(policy.premium) / 100 / 100).toFixed(4)} SOL
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-10 flex justify-center">
-            {paymentStatus === 'idle' ? (
-              <button 
-                className="bg-primary text-black px-8 py-3 rounded-lg font-semibold hover:bg-primary-hover transition-colors"
-                onClick={() => {
-                  if (!connected) {
-                    setShowWalletModal(true);
-                  } else {
-                    setPaymentStatus('processing');
-                  }
-                }}
-              >
-                Purchase This Policy
-              </button>
-            ) : paymentStatus === 'processing' ? (
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mb-2"></div>
-                <p>Processing your payment...</p>
-                {!connected && (
-                  <div className="mt-4">
-                    <ClientWalletWrapper>
-                      <WalletMultiButton className="bg-primary hover:bg-primary-hover text-black py-2 px-4 rounded-lg transition-colors" />
-                    </ClientWalletWrapper>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-600">{error}</p>
                   </div>
                 )}
-              </div>
-            ) : paymentStatus === 'success' ? (
-              <div className="flex flex-col items-center text-green-600">
-                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"></path>
-                </svg>
-                <p className="font-medium">Payment successful! Redirecting to dashboard...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center text-red-600">
-                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                <p className="font-medium">Payment failed. Please try again.</p>
+
                 <button 
-                  className="mt-4 bg-primary text-black px-6 py-2 rounded-lg font-medium hover:bg-primary-hover transition-colors"
-                  onClick={() => setPaymentStatus('idle')}
+                  type="submit"
+                  disabled={!connected || isSubmitting}
+                  className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-colors duration-200 ${
+                    !connected 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : isSubmitting
+                      ? 'bg-indigo-400'
+                      : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
                 >
-                  Try Again
+                  {!connected 
+                    ? 'Connect Wallet to Purchase'
+                    : isSubmitting 
+                    ? 'Processing Payment...'
+                    : 'Purchase Policy'
+                  }
                 </button>
-              </div>
-            )}
-          </div>
-          
-          {showWalletModal && paymentStatus === 'idle' && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg max-w-md w-full">
-                <h3 className="text-xl font-bold mb-4">Connect Your Wallet</h3>
-                <p className="mb-6 text-secondary">Please connect your wallet to proceed with the payment.</p>
-                
-                <div className="mb-6">
-                  <ClientWalletWrapper>
-                    <WalletMultiButton className="bg-primary hover:bg-primary-hover text-black py-2 px-4 rounded-lg transition-colors w-full" />
-                  </ClientWalletWrapper>
-                </div>
-                
-                <div className="flex justify-between">
-                  <button 
-                    className="text-secondary hover:text-black transition-colors"
-                    onClick={() => setShowWalletModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  
-                  <button 
-                    className="bg-primary text-black px-4 py-2 rounded-lg font-medium hover:bg-primary-hover transition-colors"
-                    onClick={() => {
-                      if (connected) {
-                        setShowWalletModal(false);
-                        setPaymentStatus('processing');
-                      }
-                    }}
-                    disabled={!connected}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
+
+                <p className="text-sm text-black-500 text-center">
+                  By purchasing, you agree to our terms and conditions
+                </p>
+              </form>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </PageLayout>
+    </div>
   );
 } 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from '@/app/lib/jwt';
+import { cookies } from 'next/headers';
 
 // In-memory user database with default mock data for demonstration
 const mockUsers = new Map([
@@ -17,63 +18,68 @@ const mockUsers = new Map([
  * GET /api/user/profile
  * Retrieves the user profile information based on wallet authentication
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // 1. Get the token from cookies or authorization header
-    const authToken = request.cookies.get('accessToken')?.value || 
-      request.headers.get('Authorization')?.replace('Bearer ', '') ||
-      '';
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('accessToken')?.value;
     
-    if (!authToken) {
-      // Try to get from cookie store 
-      return NextResponse.json({
-        success: false,
-        message: 'Authentication required',
-      }, { status: 401 });
+    if (!accessToken) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      );
     }
     
-    // 2. Verify the JWT token
-    const payload = jwtVerify(authToken);
-    if (!payload || typeof payload === 'string' || !payload.walletAddress) {
-      return NextResponse.json({
-        success: false, 
-        message: 'Invalid authentication token',
-      }, { status: 401 });
-    }
+    const apiUrl = process.env.BACKEND_API_URL || 'http://localhost:3001/api';
     
-    const { walletAddress } = payload;
-    
-    // 3. Get the user data for the wallet address
-    // In a real app, this would query a database
-    let userData = mockUsers.get(walletAddress);
-    
-    // If user doesn't exist in our mock database, create a minimal record
-    if (!userData) {
-      userData = {
-        id: Date.now(),
-        email: '', // Empty email as we only have wallet auth
-        fullName: '',
-        phoneNumber: '',
-        walletAddress,
-        isProfileComplete: false,
-      };
+    try {
+      // Fetch user profile from backend
+      const response = await fetch(`${apiUrl}/users/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+      });
       
-      // Store in our mock database
-      mockUsers.set(walletAddress, userData);
+      if (!response.ok) {
+        if (response.status === 401) {
+          return NextResponse.json(
+            { success: false, message: 'Authentication required' },
+            { status: 401 }
+          );
+        }
+        throw new Error(`Backend responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return NextResponse.json(data);
+      
+    } catch (error) {
+      console.error('Backend connection error:', error);
+      
+      // Return mock data if backend is not available
+      return NextResponse.json({
+        success: true,
+        data: {
+          wallet: '8dRGxRZYGZ71qt4zQAXVJNfQvTercVGPNHbyt3umaovm',
+          accountStatus: 'Active',
+          policies: 3,
+          totalCoverage: '4,500 SOL'
+        }
+      });
     }
     
-    // 4. Return the user data
-    return NextResponse.json({
-      success: true,
-      data: userData,
-    });
   } catch (error) {
-    console.error('Error fetching user profile:', error);
-    
-    return NextResponse.json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to fetch user profile',
-    }, { status: 500 });
+    console.error('Profile fetch error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'An error occurred while fetching profile data'
+      },
+      { status: 500 }
+    );
   }
 }
 

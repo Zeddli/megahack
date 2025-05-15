@@ -9,6 +9,8 @@ import {
 } from '../controllers/userController';
 import { validateCreateUser, validateLogin } from '../middleware/validationMiddleware';
 import { authenticate, isAdmin } from '../middleware/authMiddleware';
+import { mockDataStore } from '../services/mockDataStore';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -153,7 +155,35 @@ router.post('/login', validateLogin, loginUser);
  *       401:
  *         description: Not authenticated
  */
-router.get('/profile', authenticate, getUserProfile);
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const walletAddress = req.user?.walletAddress;
+    if (!walletAddress) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    const user = await mockDataStore.getUserByWalletAddress(walletAddress);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        wallet: user.walletAddress,
+        accountStatus: user.accountStatus,
+        policies: user.activePolicies,
+        totalCoverage: `${user.totalCoverage} SOL`
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
+  }
+});
 
 /**
  * @swagger
