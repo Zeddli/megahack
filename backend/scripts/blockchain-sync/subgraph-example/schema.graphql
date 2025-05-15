@@ -1,0 +1,75 @@
+type Policy @entity {
+  id: ID!
+  owner: String!
+  riskPoolId: String!
+  coverageAmount: String!
+  premium: String!
+  startTime: BigInt!
+  duration: BigInt!
+  endTime: BigInt!
+  status: String!
+  locationLat: Float!
+  locationLon: Float!
+  triggerType: String!
+  triggerThreshold: String!
+  createdAt: BigInt!
+  claimTime: BigInt
+}
+
+type RiskPool @entity {
+  id: ID!
+  authority: String!
+  name: String!
+  riskType: String!
+  totalFunds: String!
+  allocatedFunds: String!
+  minCapitalRequirement: String!
+  active: Boolean!
+  createdAt: BigInt!
+  policies: [Policy!]! @derivedFrom(field: "riskPoolId")
+  capitalProviders: [CapitalProvider!]! @derivedFrom(field: "riskPool")
+}
+
+type CapitalProvider @entity {
+  id: ID!
+  authority: String!
+  riskPool: RiskPool!
+  stakeAmount: String!
+  addedAt: BigInt!
+  lastUpdate: BigInt!
+}
+
+type Transaction @entity {
+  id: ID!
+  type: String!
+  amount: String!
+  timestamp: BigInt!
+  status: String!
+  policyId: String
+  riskPoolId: String
+  sender: String!
+  receiver: String!
+  txHash: String!
+  block: BigInt!
+}
+
+type OracleData @entity {
+  id: ID!
+  oracle: String!
+  oracleType: String!
+  dataValue: String!
+  reportedAt: BigInt!
+  locationLat: Float!
+  locationLon: Float!
+  recordedAt: BigInt!
+}
+
+type Claim @entity {
+  id: ID!
+  policy: Policy!
+  oracleData: OracleData!
+  amount: String!
+  claimant: String!
+  timestamp: BigInt!
+  txHash: String!
+} 
