@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Turbopack configuration
-  turbopack: {
-    enabled: false, // Disable for now to ensure compatibility
-  },
+  // Simple turbopack flag instead of object
+  turbopack: false,
   experimental: {
     optimizeCss: false
   },
