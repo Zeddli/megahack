@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   // Simple turbopack flag instead of object
-  turbopack: false,
+  turbopack: true,
   experimental: {
     optimizeCss: false
   },
