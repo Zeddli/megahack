@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Disable Turbopack due to compatibility issues
+  // Turbopack configuration
+  turbopack: {
+    enabled: false, // Disable for now to ensure compatibility
+  },
   experimental: {
-    turbo: true,
     optimizeCss: false
   },
   webpack: (config, { isServer }) => {
