@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+import { Inter } from 'next/font/google';
 
 import "./globals.css";
 import Footer from "./components/Footer";
 import Navigation from "./components/Navigation";
 import WalletContextProvider from "./components/WalletContextProvider";
 import { AuthProvider } from "./contexts/AuthContext";
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Great Insure",
@@ -29,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
+        className={`${inter.className} antialiased`}
       >
         <WalletContextProvider>
           <AuthProvider>
